@@ -31,5 +31,8 @@ if [ "$1" = "start" ]; then
 		echo "Failed to start $vmname. Monitor port $MONITOR_PORT does not respond."
 		exit 1
 	fi
+elif [ "$1" = "stop" ]; then
+	echo "Stopping $vmname. Please wait."
+	echo "system_powerdown" | nc localhost $MONITOR_PORT >/dev/null
 fi
 
