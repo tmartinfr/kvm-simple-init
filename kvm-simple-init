@@ -5,6 +5,8 @@
 # URL : https://github.com/tmartinfr/kvm-simple-init
 # Author : Thomas Martin <thomas@oopss.org>
 
+set -e
+
 usage() {
 	echo "$0 [start|stop|restart] VM"
 	exit 1
