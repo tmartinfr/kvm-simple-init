@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# kvm-simple-init
+# Description : Simple init script to manage KVM virtual machines
+# URL : https://github.com/tmartinfr/kvm-simple-init
+# Author : Thomas Martin <thomas@oopss.org>
+
+usage() {
+	echo "$0 [start|stop|restart] VM"
+	exit 1
+}
+
+if [ $# -ne 2 ]; then
+	usage
+fi
+
+vmname="$2"
+vmfile="/etc/kvm-simple-init/$vmname"
+
+if ! [ -r "$vmfile" ]; then
+	echo "$vmfile not readable. Aborting."
+	exit 2
+fi
+
+source $vmfile
+
+if [ "$1" = "start" ]; then
+	echo "Starting $vmname"
+	kvm $KVM_OPTS
+	if ! nc -z localhost $MONITOR_PORT; then
+		echo "Failed to start $vmname. Monitor port $MONITOR_PORT does not respond."
+		exit 1
+	fi
+fi
+
