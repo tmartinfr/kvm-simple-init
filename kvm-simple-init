@@ -68,7 +68,7 @@ send_qemu_cmd() {
 	cmd="$2"
 
 	(sleep $QEMU_CMD_WAIT; echo "$cmd";) \
-	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null &
+	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null 2>/dev/null &
 }
 
 if [ "$1" = "start" ]; then
