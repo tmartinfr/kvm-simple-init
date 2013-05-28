@@ -30,12 +30,20 @@ fi
 
 source $vmfile
 
+is_port_open() {
+	nc -z localhost $1
+}
+
 if [ "$1" = "start" ]; then
-	echo "Starting $vmname"
+	echo "Starting $vmname..."
 	kvm $KVM_OPTS
-	if ! nc -z localhost $MONITOR_PORT; then
-		echo "Failed to start $vmname. Monitor port $MONITOR_PORT does not respond."
-		exit 1
+	echo "Testing VM..."
+	if is_port_open $MONITOR_PORT; then
+		echo "VM started."
+		exit 0
+	else
+		echo "Failed to start $vmname."
+		exit 3
 	fi
 elif [ "$1" = "stop" ]; then
 	echo "Stopping $vmname. Please wait."
