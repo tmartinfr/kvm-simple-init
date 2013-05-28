@@ -6,6 +6,7 @@
 # Author : Thomas Martin <thomas@oopss.org>
 
 set -e
+WAIT_FOR_START=5        # Number of seconds to wait for VM start
 
 usage() {
 	cat <<EOT
@@ -30,15 +31,28 @@ fi
 
 source $vmfile
 
-is_port_open() {
-	nc -z localhost $1
+# Test if VM is running by checking availability of the monitor port.
+# Wait until $timeout seconds.
+is_vm_running() {
+	monitor_port=$1
+	timeout=$2
+
+	while [ $timeout -gt 0 ]; do
+		if ! nc -z localhost $monitor_port; then
+			exit 0
+		fi
+		sleep 1
+		echo x
+		timeout=$(($timeout - 1))
+	done
+}
 }
 
 if [ "$1" = "start" ]; then
 	echo "Starting $vmname..."
 	kvm $KVM_OPTS
-	echo "Testing VM..."
-	if is_port_open $MONITOR_PORT; then
+
+	if is_vm_running $MONITOR_PORT $WAIT_FOR_START; then
 		echo "VM started."
 		exit 0
 	else
