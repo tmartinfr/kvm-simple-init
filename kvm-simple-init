@@ -113,5 +113,7 @@ elif [ "$1" = "stop" ]; then
 		echo "Failed to stop $vmname using hard shutdown."
 		exit 4
 	fi
+else
+	usage
 fi
 
