@@ -6,7 +6,17 @@
 # Author : Thomas Martin <thomas@oopss.org>
 
 set -e
-WAIT_FOR_START=5        # Number of seconds to wait for VM start
+
+# Number of seconds before :
+WAIT_FOR_START=5        # VM start
+WAIT_FOR_SOFT_STOP=30   # VM soft shutdown
+WAIT_FOR_HARD_STOP=5    # VM hard shutdown
+
+# Number of seconds before sending command to qemu after connecting to port
+QEMU_CMD_WAIT=2
+
+# Timeout before netcat timeout when sending commands to qemu
+NC_TIMEOUT=5
 
 usage() {
 	cat <<EOT
@@ -42,10 +52,17 @@ is_vm_running() {
 			exit 0
 		fi
 		sleep 1
-		echo x
 		timeout=$(($timeout - 1))
 	done
 }
+
+# Send command to VM using QEMU monitor port
+send_qemu_cmd() {
+	monitor_port="$1"
+	cmd="$2"
+
+	(sleep $QEMU_CMD_WAIT; echo "$cmd";) \
+	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null &
 }
 
 if [ "$1" = "start" ]; then
@@ -60,7 +77,25 @@ if [ "$1" = "start" ]; then
 		exit 3
 	fi
 elif [ "$1" = "stop" ]; then
-	echo "Stopping $vmname. Please wait."
-	echo "system_powerdown" | nc localhost $MONITOR_PORT >/dev/null
+	echo "Stopping $vmname..."
+	send_qemu_cmd $MONITOR_PORT "system_powerdown"
+
+	if is_vm_running $MONITOR_PORT $WAIT_FOR_SOFT_STOP; then
+		echo "Failed to stop $vmname using soft shutdown."
+	else
+		echo "VM stopped."
+		exit 0
+	fi
+
+	echo "Killing $vmname..."
+	send_qemu_cmd $MONITOR_PORT "quit"
+
+	if is_vm_running $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
+		echo "VM stopped."
+		exit 0
+	else
+		echo "Failed to stop $vmname using hard shutdown."
+		exit 4
+	fi
 fi
 
