@@ -21,7 +21,7 @@ NC_TIMEOUT=5
 
 usage() {
 	cat <<EOT
-$0 [start|stop|restart] VM"
+$0 [start|stop|restart] VM
 
 VM should match a configuration file in /etc/kvm-simple-init/.
 EOT
