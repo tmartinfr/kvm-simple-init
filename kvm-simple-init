@@ -8,7 +8,11 @@
 set -e
 
 usage() {
-	echo "$0 [start|stop|restart] VM"
+	cat <<EOT
+$0 [start|stop|restart] VM"
+
+VM should match a configuration file in /etc/kvm-simple-init/.
+EOT
 	exit 1
 }
 
