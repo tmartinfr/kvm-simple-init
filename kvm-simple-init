@@ -7,6 +7,11 @@
 
 set -e
 
+
+###############################################################################
+# Hard-coded parameters
+###############################################################################
+
 # Number of seconds before :
 WAIT_FOR_START=5        # VM start
 WAIT_FOR_SOFT_STOP=30   # VM soft shutdown
@@ -18,6 +23,11 @@ QEMU_CMD_WAIT=2
 
 # Timeout before netcat timeout when sending commands to qemu
 NC_TIMEOUT=5
+
+
+###############################################################################
+# Input validation
+###############################################################################
 
 usage() {
 	cat <<EOT
@@ -41,6 +51,11 @@ if ! [ -r "$vmfile" ]; then
 fi
 
 source $vmfile
+
+
+###############################################################################
+# Functions
+###############################################################################
 
 # Test if VM is running or stopped by checking availability of the monitor port.
 # Wait until $timeout seconds.
@@ -70,6 +85,11 @@ send_qemu_cmd() {
 	(sleep $QEMU_CMD_WAIT; echo "$cmd";) \
 	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null 2>/dev/null &
 }
+
+
+###############################################################################
+# Actions
+###############################################################################
 
 if [ "$1" = "start" ]; then
 	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
