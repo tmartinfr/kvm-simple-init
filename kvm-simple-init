@@ -11,6 +11,7 @@ set -e
 WAIT_FOR_START=5        # VM start
 WAIT_FOR_SOFT_STOP=30   # VM soft shutdown
 WAIT_FOR_HARD_STOP=5    # VM hard shutdown
+WAIT_FOR_TEST=2         # VM testing
 
 # Number of seconds before sending command to qemu after connecting to port
 QEMU_CMD_WAIT=2
@@ -71,6 +72,11 @@ send_qemu_cmd() {
 }
 
 if [ "$1" = "start" ]; then
+	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
+		echo "$vmname already running."
+		exit 5
+	fi
+
 	echo "Starting $vmname..."
 	kvm $KVM_OPTS
 
@@ -82,6 +88,11 @@ if [ "$1" = "start" ]; then
 		exit 3
 	fi
 elif [ "$1" = "stop" ]; then
+	if vm_state stopped $MONITOR_PORT $WAIT_FOR_TEST; then
+		echo "$vmname already stopped."
+		exit 5
+	fi
+
 	echo "Stopping $vmname..."
 	send_qemu_cmd $MONITOR_PORT "system_powerdown"
 
