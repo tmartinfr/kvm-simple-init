@@ -55,15 +55,8 @@ if [ $# -ne 2 ]; then
 	usage
 fi
 
+action="$1"
 vmname="$2"
-vmfile="/etc/kvm-simple-init/$vmname"
-
-if ! [ -r "$vmfile" ]; then
-	echo "$vmfile not readable. Aborting."
-	exit 2
-fi
-
-source $vmfile
 
 
 ###############################################################################
@@ -99,12 +92,29 @@ send_qemu_cmd() {
 	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null 2>/dev/null &
 }
 
+# Load environment variables in the configuration file
+load_vm_config() {
+	vmname="$1"
+	vmfile="/etc/kvm-simple-init/$vmname"
 
-###############################################################################
-# Actions
-###############################################################################
+	if ! [ -r "$vmfile" ]; then
+		echo "$vmfile not readable. Aborting."
+		exit 2
+	fi
 
-if [ "$1" = "start" ]; then
+	. $vmfile
+}
+
+# Clean global variables imported from the configuration file
+cleanup_env() {
+	unset MONITOR_PORT KVM_OPTS
+}
+
+# Start the VM with the name passed in argument
+vm_start() {
+	vmname="$1"
+	load_vm_config $vmname
+
 	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
 		echo "$vmname already running."
 		exit 5
@@ -115,12 +125,19 @@ if [ "$1" = "start" ]; then
 
 	if vm_state running $MONITOR_PORT $WAIT_FOR_START; then
 		echo "VM started."
-		exit 0
 	else
-		echo "Failed to start $vmname."
+		echo "Failed to start."
 		exit 3
 	fi
-elif [ "$1" = "stop" ]; then
+
+	cleanup_env
+}
+
+# Stop the VM with the name passed in argument
+vm_stop() {
+	vmname="$1"
+	load_vm_config $vmname
+
 	if vm_state stopped $MONITOR_PORT $WAIT_FOR_TEST; then
 		echo "$vmname already stopped."
 		exit 5
@@ -131,21 +148,35 @@ elif [ "$1" = "stop" ]; then
 
 	if vm_state stopped $MONITOR_PORT $WAIT_FOR_SOFT_STOP; then
 		echo "VM stopped."
-		exit 0
 	else
-		echo "Failed to stop $vmname using soft shutdown."
+		echo "Failed to stop using soft shutdown."
+
+		echo "Killing $vmname..."
+		send_qemu_cmd $MONITOR_PORT "quit"
+
+		if vm_state stopped $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
+			echo "VM stopped."
+		else
+			echo "Failed to stop using hard shutdown."
+			exit 4
+		fi
 	fi
 
-	echo "Killing $vmname..."
-	send_qemu_cmd $MONITOR_PORT "quit"
+	cleanup_env
+}
 
-	if vm_state stopped $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
-		echo "VM stopped."
-		exit 0
-	else
-		echo "Failed to stop $vmname using hard shutdown."
-		exit 4
-	fi
+
+###############################################################################
+# Actions
+###############################################################################
+
+if [ "$action" = "start" ]; then
+	vm_start $vmname
+elif [ "$action" = "stop" ]; then
+	vm_stop $vmname
+elif [ "$action" = "restart" ]; then
+	vm_stop $vmname
+	vm_start $vmname
 else
 	usage
 fi
