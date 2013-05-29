@@ -25,6 +25,9 @@ set -e
 # Hard-coded parameters
 ###############################################################################
 
+# Configuration directory
+CONFDIR=/etc/kvm-simple-init
+
 # Number of seconds before :
 WAIT_FOR_START=5        # VM start
 WAIT_FOR_SOFT_STOP=30   # VM soft shutdown
@@ -39,24 +42,30 @@ NC_TIMEOUT=5
 
 
 ###############################################################################
-# Input validation
+# Help
 ###############################################################################
 
 usage() {
 	cat <<EOT
-$0 [start|stop|restart] VM
+$0 [start|stop|restart] [VM]
 
-VM should match a configuration file in /etc/kvm-simple-init/.
+$CONFDIR/ contains virtual machines configuration files.
+
+The specified action (start, stop, restart) is executed :
+
+- If VM argument is specified, on the corresponding file in the directory
+- If not, on all files in the directory
+
+VM configuration files should contain at least two shell variables :
+
+MONITOR_PORT=    # Unique port number used to determine if VM is running
+KVM_OPTS=        # kvm arguments necessary to launch the VM
+
+See README file for examples.
+
 EOT
 	exit 1
 }
-
-if [ $# -ne 2 ]; then
-	usage
-fi
-
-action="$1"
-vmname="$2"
 
 
 ###############################################################################
@@ -95,7 +104,7 @@ send_qemu_cmd() {
 # Load environment variables in the configuration file
 load_vm_config() {
 	vmname="$1"
-	vmfile="/etc/kvm-simple-init/$vmname"
+	vmfile="$CONFDIR/$vmname"
 
 	if ! [ -r "$vmfile" ]; then
 		echo "$vmfile not readable. Aborting."
@@ -173,14 +182,26 @@ vm_stop() {
 # Actions
 ###############################################################################
 
-if [ "$action" = "start" ]; then
-	vm_start $vmname
-elif [ "$action" = "stop" ]; then
-	vm_stop $vmname
-elif [ "$action" = "restart" ]; then
-	vm_stop $vmname
-	vm_start $vmname
+if [ $# -eq 1 ]; then
+	vmnames=$(ls $CONFDIR)
+elif [ $# -eq 2 ]; then
+	vmnames=$2
 else
 	usage
 fi
+
+action="$1"
+
+for vmname in $vmnames; do
+	if [ "$action" = "start" ]; then
+		vm_start $vmname
+	elif [ "$action" = "stop" ]; then
+		vm_stop $vmname
+	elif [ "$action" = "restart" ]; then
+		vm_stop $vmname
+		vm_start $vmname
+	else
+		usage
+	fi
+done
 
