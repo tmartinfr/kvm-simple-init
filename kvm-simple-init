@@ -103,6 +103,9 @@ load_vm_config() {
 	fi
 
 	. $vmfile
+
+	[ "$MONITOR_PORT" ] || { echo "MONITOR_PORT is missing in $vmfile."; exit 1; }
+	[ "$KVM_OPTS" ] || { echo "KVM_OPTS is missing in $vmfile"; exit 1; }
 }
 
 # Clean global variables imported from the configuration file
