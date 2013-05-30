@@ -141,8 +141,6 @@ vm_start() {
 		echo "Failed."
 		return 1
 	fi
-
-	cleanup_env
 }
 
 # Stop the VM with the name passed in argument
@@ -173,8 +171,6 @@ vm_stop() {
 			return 1
 		fi
 	fi
-
-	cleanup_env
 }
 
 
@@ -204,6 +200,8 @@ for vmname in $vmnames; do
 	else
 		usage
 	fi
+
+	cleanup_env
 done
 
 exit $retcode
