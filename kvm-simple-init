@@ -48,21 +48,6 @@ NC_TIMEOUT=5
 usage() {
 	cat <<EOT
 $0 [start|stop|restart] [VM]
-
-$CONFDIR/ contains virtual machines configuration files.
-
-The specified action (start, stop, restart) is executed :
-
-- If VM argument is specified, on the corresponding file in the directory
-- If not, on all files in the directory
-
-VM configuration files should contain at least two shell variables :
-
-MONITOR_PORT=    # Unique port number used to determine if VM is running
-KVM_OPTS=        # kvm arguments necessary to launch the VM
-
-See README file for examples.
-
 EOT
 	exit 1
 }
