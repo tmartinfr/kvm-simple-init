@@ -108,13 +108,13 @@ load_vm_config() {
 
 	if ! [ -r "$vmfile" ]; then
 		echo "$vmfile not readable. Aborting."
-		exit 2
+		return 1
 	fi
 
 	. $vmfile
 
-	[ "$MONITOR_PORT" ] || { echo "MONITOR_PORT is missing in $vmfile."; exit 1; }
-	[ "$KVM_OPTS" ] || { echo "KVM_OPTS is missing in $vmfile"; exit 1; }
+	[ "$MONITOR_PORT" ] || { echo "$vmfile: Missing MONITOR_PORT."; return 1; }
+	[ "$KVM_OPTS" ] || { echo "$vmfile: Missing KVM_OPTS."; return 1; }
 }
 
 # Clean global variables imported from the configuration file
@@ -125,21 +125,21 @@ cleanup_env() {
 # Start the VM with the name passed in argument
 vm_start() {
 	vmname="$1"
-	load_vm_config $vmname
+	load_vm_config $vmname || return 1
 
 	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
-		echo "$vmname already running."
-		exit 5
+		echo "Not starting $vmname. Already running."
+		return 0
 	fi
 
-	echo "Starting $vmname..."
+	echo -n "Starting $vmname... "
 	kvm $KVM_OPTS
 
 	if vm_state running $MONITOR_PORT $WAIT_FOR_START; then
-		echo "VM started."
+		echo "Done."
 	else
-		echo "Failed to start."
-		exit 3
+		echo "Failed."
+		return 1
 	fi
 
 	cleanup_env
@@ -148,29 +148,29 @@ vm_start() {
 # Stop the VM with the name passed in argument
 vm_stop() {
 	vmname="$1"
-	load_vm_config $vmname
+	load_vm_config $vmname || return 1
 
 	if vm_state stopped $MONITOR_PORT $WAIT_FOR_TEST; then
-		echo "$vmname already stopped."
-		exit 5
+		echo "Not stopping $vmname. Already stopped."
+		return 0
 	fi
 
-	echo "Stopping $vmname..."
+	echo -n "Stopping $vmname... "
 	send_qemu_cmd $MONITOR_PORT "system_powerdown"
 
 	if vm_state stopped $MONITOR_PORT $WAIT_FOR_SOFT_STOP; then
-		echo "VM stopped."
+		echo "Done."
 	else
-		echo "Failed to stop using soft shutdown."
+		echo "Failed."
 
-		echo "Killing $vmname..."
+		echo -n "Killing $vmname... "
 		send_qemu_cmd $MONITOR_PORT "quit"
 
 		if vm_state stopped $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
-			echo "VM stopped."
+			echo "Done."
 		else
-			echo "Failed to stop using hard shutdown."
-			exit 4
+			echo "Failed."
+			return 1
 		fi
 	fi
 
@@ -191,17 +191,20 @@ else
 fi
 
 action="$1"
+retcode=0
 
 for vmname in $vmnames; do
 	if [ "$action" = "start" ]; then
-		vm_start $vmname
+		vm_start $vmname || retcode=1
 	elif [ "$action" = "stop" ]; then
-		vm_stop $vmname
+		vm_stop $vmname || retcode=1
 	elif [ "$action" = "restart" ]; then
-		vm_stop $vmname
-		vm_start $vmname
+		vm_stop $vmname || retcode=1
+		vm_start $vmname || retcode=1
 	else
 		usage
 	fi
 done
+
+exit $retcode
 
