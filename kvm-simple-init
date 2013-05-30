@@ -30,7 +30,7 @@ CONFDIR=/etc/kvm-simple-init
 
 # Number of seconds before :
 WAIT_FOR_START=5        # VM start
-WAIT_FOR_SOFT_STOP=30   # VM soft shutdown
+WAIT_FOR_SOFT_STOP=60   # VM soft shutdown
 WAIT_FOR_HARD_STOP=5    # VM hard shutdown
 WAIT_FOR_TEST=2         # VM testing
 
