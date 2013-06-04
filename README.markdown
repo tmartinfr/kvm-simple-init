@@ -119,7 +119,7 @@ To manage all the VMs (usually when booting or stopping the system) :
 
 - 2013-05-30 : Package for Debian
 - 2013-05-30 : Add man page
-- 2013-05-30 : Add status command
+- 2013-05-30 : Add status command (also for LSB compliance)
 - 2013-06-03 : Add parameter AUTOSTART to VM config
 
 ## Author

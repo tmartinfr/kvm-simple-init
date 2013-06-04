@@ -5,6 +5,16 @@
 # URL : https://github.com/tmartinfr/kvm-simple-init
 # Copyright 2013 Thomas Martin <thomas@oopss.org>
 
+### BEGIN INIT INFO
+# Provides:          kvm-simple-init
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: KVM init script
+# Description:       Simple init script to manage KVM virtual machines
+### END INIT INFO
+
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -179,7 +189,7 @@ for vmname in $vmnames; do
 		vm_start $vmname || retcode=1
 	elif [ "$action" = "stop" ]; then
 		vm_stop $vmname || retcode=1
-	elif [ "$action" = "restart" ]; then
+	elif [ "$action" = "restart" ] || [ "$action" = "force-reload" ]; then
 		vm_stop $vmname || retcode=1
 		vm_start $vmname || retcode=1
 	else
