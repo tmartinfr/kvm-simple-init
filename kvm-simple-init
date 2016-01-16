@@ -99,7 +99,7 @@ send_qemu_cmd() {
 # Load environment variables in the configuration file
 load_vm_config() {
 	vmname="$1"
-	vmfile="$CONFDIR/$vmname"
+	vmfile="$CONFDIR/${vmname}.conf"
 
 	if ! [ -r "$vmfile" ]; then
 		echo "$vmfile not readable. Aborting."
@@ -185,7 +185,7 @@ vm_status() {
 ###############################################################################
 
 if [ $# -eq 1 ]; then
-	vmnames=$(ls $CONFDIR)
+	vmnames=$(ls ${CONFDIR}/*.conf | xargs -n1 basename)
 elif [ $# -eq 2 ]; then
 	vmnames=$2
 else
@@ -196,6 +196,8 @@ action="$1"
 retcode=0
 
 for vmname in $vmnames; do
+	vmname=${vmname%.conf}
+	
 	if [ "$action" = "start" ]; then
 		vm_start $vmname || retcode=1
 	elif [ "$action" = "stop" ]; then
