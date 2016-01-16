@@ -57,7 +57,7 @@ NC_TIMEOUT=5
 
 usage() {
 	cat <<EOT
-$0 [start|stop|restart] [VM]
+$0 {start|stop|restart|status} [VM]
 EOT
 	exit 1
 }
@@ -168,6 +168,17 @@ vm_stop() {
 	fi
 }
 
+# Get the status of the VM with the name passed in as an argument
+vm_status() {
+	vmname="$1"
+	load_vm_config $vmname || return 1
+
+	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
+		echo "$vmname is running."
+	else
+		echo "$vmname is stopped."
+	fi
+}
 
 ###############################################################################
 # Actions
@@ -192,6 +203,8 @@ for vmname in $vmnames; do
 	elif [ "$action" = "restart" ] || [ "$action" = "force-reload" ]; then
 		vm_stop $vmname || retcode=1
 		vm_start $vmname || retcode=1
+	elif [ "$action" = "status" ]; then
+		vm_status $vmname || retcode=1
 	else
 		usage
 	fi
