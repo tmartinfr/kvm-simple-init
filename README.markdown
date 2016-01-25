@@ -81,23 +81,8 @@ __Warning__ : if the virtual machine does not respond to stop action (because th
 
 ## Example
 
-Create `/etc/kvm-simple-init/test1` :
-
-~~~~~
-# Should be unique among all VMs
-MONITOR_PORT=5805
-
-# Not mandatory, but useful to keep it in a distinct variable
-VNC_DISPLAY=5
-
-# KVM parameters
-KVM_OPTS="\
--cpu host -m 1024 -smp 1 \
--drive index=0,media=disk,file=/srv/kvm/test1.raw,if=virtio \
--vnc 127.0.0.1:$VNC_DISPLAY -monitor tcp:127.0.0.1:$MONITOR_PORT,server,nowait \
--daemonize \
-"
-~~~~~
+Create a `/etc/kvm-simple-init/test1` config file, according to the example
+provided in the file `config.example`.
 
 Then, manage the VM with :
 
