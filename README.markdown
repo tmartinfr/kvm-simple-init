@@ -54,7 +54,7 @@ Then, drop `kvm-simple-init` somewhere into your PATH (`/usr/local/sbin` could
 be a good place), or into `/etc/init.d` if intended to be used as system init
 script.
 
-Currently, this tool has only been tested on Debian 6.0 and 7.0.
+Currently, this tool has only been tested on Debian 6.0, Debian 7.0, Ubuntu 15.10.
 
 ## Usage
 
