@@ -114,7 +114,7 @@ To manage all the VMs (usually when booting or stopping the system) :
 
 ## License
 
-Copyright 2013 Thomas Martin <thomas@oopss.org>
+Copyright 2013-2016 Thomas Martin <thomas@oopss.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
