@@ -56,10 +56,10 @@ NC_TIMEOUT=5
 ###############################################################################
 
 usage() {
-	cat <<EOT
+    cat <<EOT
 $0 {start|stop|restart|status} [VM]
 EOT
-	exit 1
+    exit 1
 }
 
 
@@ -70,114 +70,114 @@ EOT
 # Test if VM is running or stopped by checking availability of the monitor port.
 # Wait until $timeout seconds.
 vm_state() {
-	state_to_check=$1   # "running" or "stopped"
-	monitor_port=$2
-	timeout=$3
+    state_to_check=$1   # "running" or "stopped"
+    monitor_port=$2
+    timeout=$3
 
-	while [ $timeout -gt 0 ]; do
-		if nc -z localhost $monitor_port; then
-			[ "$state_to_check" = "running" ] && return 0
-		else
-			[ "$state_to_check" = "stopped" ] && return 0
-		fi
-		sleep 1
-		timeout=$(($timeout - 1))
-	done
+    while [ $timeout -gt 0 ]; do
+        if nc -z localhost $monitor_port; then
+            [ "$state_to_check" = "running" ] && return 0
+        else
+            [ "$state_to_check" = "stopped" ] && return 0
+        fi
+        sleep 1
+        timeout=$(($timeout - 1))
+    done
 
-	return 1
+    return 1
 }
 
 # Send command to VM using QEMU monitor port
 send_qemu_cmd() {
-	monitor_port="$1"
-	cmd="$2"
+    monitor_port="$1"
+    cmd="$2"
 
-	(sleep $QEMU_CMD_WAIT; echo "$cmd";) \
-	   | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null 2>/dev/null &
+    (sleep $QEMU_CMD_WAIT; echo "$cmd";) \
+       | timeout $NC_TIMEOUT nc localhost $monitor_port >/dev/null 2>/dev/null &
 }
 
 # Load environment variables in the configuration file
 load_vm_config() {
-	vmname="$1"
-	vmfile="$CONFDIR/$vmname"
+    vmname="$1"
+    vmfile="$CONFDIR/$vmname"
 
-	if ! [ -r "$vmfile" ]; then
-		echo "$vmfile not readable. Aborting."
-		return 1
-	fi
+    if ! [ -r "$vmfile" ]; then
+        echo "$vmfile not readable. Aborting."
+        return 1
+    fi
 
-	. $vmfile
+    . $vmfile
 
-	[ "$MONITOR_PORT" ] || { echo "$vmfile: Missing MONITOR_PORT."; return 1; }
-	[ "$KVM_OPTS" ] || { echo "$vmfile: Missing KVM_OPTS."; return 1; }
+    [ "$MONITOR_PORT" ] || { echo "$vmfile: Missing MONITOR_PORT."; return 1; }
+    [ "$KVM_OPTS" ] || { echo "$vmfile: Missing KVM_OPTS."; return 1; }
 }
 
 # Clean global variables imported from the configuration file
 cleanup_env() {
-	unset MONITOR_PORT KVM_OPTS
+    unset MONITOR_PORT KVM_OPTS
 }
 
 # Start the VM with the name passed in argument
 vm_start() {
-	vmname="$1"
-	load_vm_config $vmname || return 1
+    vmname="$1"
+    load_vm_config $vmname || return 1
 
-	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
-		echo "Not starting $vmname. Already running."
-		return 0
-	fi
+    if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
+        echo "Not starting $vmname. Already running."
+        return 0
+    fi
 
-	echo -n "Starting $vmname... "
-	kvm $KVM_OPTS
+    echo -n "Starting $vmname... "
+    kvm $KVM_OPTS
 
-	if vm_state running $MONITOR_PORT $WAIT_FOR_START; then
-		echo "Done."
-	else
-		echo "Failed."
-		return 1
-	fi
+    if vm_state running $MONITOR_PORT $WAIT_FOR_START; then
+        echo "Done."
+    else
+        echo "Failed."
+        return 1
+    fi
 }
 
 # Stop the VM with the name passed in argument
 vm_stop() {
-	vmname="$1"
-	load_vm_config $vmname || return 1
+    vmname="$1"
+    load_vm_config $vmname || return 1
 
-	if vm_state stopped $MONITOR_PORT $WAIT_FOR_TEST; then
-		echo "Not stopping $vmname. Already stopped."
-		return 0
-	fi
+    if vm_state stopped $MONITOR_PORT $WAIT_FOR_TEST; then
+        echo "Not stopping $vmname. Already stopped."
+        return 0
+    fi
 
-	echo -n "Stopping $vmname... "
-	send_qemu_cmd $MONITOR_PORT "system_powerdown"
+    echo -n "Stopping $vmname... "
+    send_qemu_cmd $MONITOR_PORT "system_powerdown"
 
-	if vm_state stopped $MONITOR_PORT $WAIT_FOR_SOFT_STOP; then
-		echo "Done."
-	else
-		echo "Failed."
+    if vm_state stopped $MONITOR_PORT $WAIT_FOR_SOFT_STOP; then
+        echo "Done."
+    else
+        echo "Failed."
 
-		echo -n "Killing $vmname... "
-		send_qemu_cmd $MONITOR_PORT "quit"
+        echo -n "Killing $vmname... "
+        send_qemu_cmd $MONITOR_PORT "quit"
 
-		if vm_state stopped $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
-			echo "Done."
-		else
-			echo "Failed."
-			return 1
-		fi
-	fi
+        if vm_state stopped $MONITOR_PORT $WAIT_FOR_HARD_STOP; then
+            echo "Done."
+        else
+            echo "Failed."
+            return 1
+        fi
+    fi
 }
 
 # Get the status of the VM with the name passed in as an argument
 vm_status() {
-	vmname="$1"
-	load_vm_config $vmname || return 1
+    vmname="$1"
+    load_vm_config $vmname || return 1
 
-	if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
-		echo "$vmname is running."
-	else
-		echo "$vmname is stopped."
-	fi
+    if vm_state running $MONITOR_PORT $WAIT_FOR_TEST; then
+        echo "$vmname is running."
+    else
+        echo "$vmname is stopped."
+    fi
 }
 
 ###############################################################################
@@ -185,31 +185,31 @@ vm_status() {
 ###############################################################################
 
 if [ $# -eq 1 ]; then
-	vmnames=$(ls $CONFDIR)
+    vmnames=$(ls $CONFDIR)
 elif [ $# -eq 2 ]; then
-	vmnames=$2
+    vmnames=$2
 else
-	usage
+    usage
 fi
 
 action="$1"
 retcode=0
 
 for vmname in $vmnames; do
-	if [ "$action" = "start" ]; then
-		vm_start $vmname || retcode=1
-	elif [ "$action" = "stop" ]; then
-		vm_stop $vmname || retcode=1
-	elif [ "$action" = "restart" ] || [ "$action" = "force-reload" ]; then
-		vm_stop $vmname || retcode=1
-		vm_start $vmname || retcode=1
-	elif [ "$action" = "status" ]; then
-		vm_status $vmname || retcode=1
-	else
-		usage
-	fi
+    if [ "$action" = "start" ]; then
+        vm_start $vmname || retcode=1
+    elif [ "$action" = "stop" ]; then
+        vm_stop $vmname || retcode=1
+    elif [ "$action" = "restart" ] || [ "$action" = "force-reload" ]; then
+        vm_stop $vmname || retcode=1
+        vm_start $vmname || retcode=1
+    elif [ "$action" = "status" ]; then
+        vm_status $vmname || retcode=1
+    else
+        usage
+    fi
 
-	cleanup_env
+    cleanup_env
 done
 
 exit $retcode
